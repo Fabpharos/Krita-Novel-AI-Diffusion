@@ -1,0 +1,52 @@
+[
+  {
+    "tag": "limit_v4_5_6_chars",
+    "outcome": "accepted",
+    "spent": 0
+  },
+  {
+    "tag": "limit_v4_5_7_chars",
+    "outcome": "REFUSED",
+    "spent": null
+  },
+  {
+    "tag": "limit_v5_22_chars",
+    "outcome": "accepted",
+    "spent": 0
+  },
+  {
+    "tag": "limit_v5_23_chars",
+    "outcome": "accepted",
+    "spent": 0
+  },
+  {
+    "tag": "side_v5_512x2048",
+    "outcome": "accepted",
+    "spent": 0
+  },
+  {
+    "tag": "side_v5_2048x512",
+    "outcome": "accepted",
+    "spent": 0
+  },
+  {
+    "tag": "side_v5_384x1024",
+    "outcome": "accepted",
+    "spent": 0
+  },
+  {
+    "tag": "hints_v5_a_typed",
+    "outcome": "accepted",
+    "spent": 0
+  },
+  {
+    "tag": "hints_v5_b_typed_plus_hints",
+    "outcome": "accepted",
+    "spent": 0
+  },
+  {
+    "tag": "hints_v5_c_hints_only",
+    "outcome": "accepted",
+    "spent": 0
+  }
+]

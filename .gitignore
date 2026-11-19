@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+dist/
+tools/out/
+.env
+nai_krita_settings.json
+
+# private working notes
+Handoff NovelAI plugin for Krita.md

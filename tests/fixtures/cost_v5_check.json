@@ -1,0 +1,42 @@
+[
+  {
+    "model": "nai-diffusion-4-5-full",
+    "width": 512,
+    "height": 512,
+    "steps": 29,
+    "estimate": 6,
+    "base_formula": 6,
+    "spent": 6,
+    "v5_allowance_used": 0.0
+  },
+  {
+    "model": "nai-diffusion-5-full",
+    "width": 512,
+    "height": 512,
+    "steps": 29,
+    "estimate": 8,
+    "base_formula": 6,
+    "spent": 9,
+    "v5_allowance_used": 0.0
+  },
+  {
+    "model": "nai-diffusion-4-5-full",
+    "width": 832,
+    "height": 1216,
+    "steps": 29,
+    "estimate": 20,
+    "base_formula": 20,
+    "spent": 20,
+    "v5_allowance_used": 0.0
+  },
+  {
+    "model": "nai-diffusion-5-full",
+    "width": 832,
+    "height": 1216,
+    "steps": 29,
+    "estimate": 30,
+    "base_formula": 20,
+    "spent": 30,
+    "v5_allowance_used": 0.0
+  }
+]

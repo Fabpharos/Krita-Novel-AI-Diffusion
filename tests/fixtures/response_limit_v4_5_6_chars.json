@@ -1,0 +1,211 @@
+{
+  "image_count": 1,
+  "png_text": {
+    "Title": "AI generated image",
+    "Description": "6+girls, crowd, very aesthetic, masterpiece, no text",
+    "Software": "NovelAI",
+    "Source": "NovelAI Diffusion V4.5 4BDE2A90",
+    "Generation_time": "3.4640181437134743",
+    "Comment": {
+      "prompt": "6+girls, crowd, very aesthetic, masterpiece, no text",
+      "steps": 28,
+      "height": 1216,
+      "width": 832,
+      "scale": 5.0,
+      "uncond_scale": 0.0,
+      "cfg_rescale": 0.0,
+      "seed": 123456789,
+      "n_samples": 1,
+      "noise_schedule": "karras",
+      "legacy_v3_extend": false,
+      "reference_information_extracted_multiple": [],
+      "reference_strength_multiple": [],
+      "extra_passthrough_testing": {
+        "prompt": null,
+        "uc": null,
+        "hide_debug_overlay": false,
+        "r": 0.0,
+        "eta": 1.0,
+        "negative_momentum": 0.0,
+        "director_reference_descriptions": null,
+        "director_reference_information_extracted": null,
+        "director_reference_strengths": null,
+        "director_reference_secondary_strengths": null,
+        "original_width": null,
+        "original_height": null,
+        "crop_top": null,
+        "crop_left": null,
+        "crash_hydra": false,
+        "upscale": null,
+        "straight_alpha": null,
+        "quality_boost": null,
+        "upscaled_enhance": null,
+        "pd_grid": null
+      },
+      "v4_prompt": {
+        "caption": {
+          "base_caption": "6+girls, crowd, very aesthetic, masterpiece, no text",
+          "char_captions": [
+            {
+              "char_caption": "girl, red hair",
+              "centers": [
+                {
+                  "x": 0.5,
+                  "y": 0.5
+                }
+              ]
+            },
+            {
+              "char_caption": "girl, blue hair",
+              "centers": [
+                {
+                  "x": 0.5,
+                  "y": 0.5
+                }
+              ]
+            },
+            {
+              "char_caption": "girl, green hair",
+              "centers": [
+                {
+                  "x": 0.5,
+                  "y": 0.5
+                }
+              ]
+            },
+            {
+              "char_caption": "girl, black hair",
+              "centers": [
+                {
+                  "x": 0.5,
+                  "y": 0.5
+                }
+              ]
+            },
+            {
+              "char_caption": "girl, white hair",
+              "centers": [
+                {
+                  "x": 0.5,
+                  "y": 0.5
+                }
+              ]
+            },
+            {
+              "char_caption": "girl, pink hair",
+              "centers": [
+                {
+                  "x": 0.5,
+                  "y": 0.5
+                }
+              ]
+            }
+          ]
+        },
+        "use_coords": false,
+        "use_order": true,
+        "legacy_uc": false
+      },
+      "v4_negative_prompt": {
+        "caption": {
+          "base_caption": "lowres",
+          "char_captions": [
+            {
+              "char_caption": "",
+              "centers": [
+                {
+                  "x": 0.5,
+                  "y": 0.5
+                }
+              ]
+            },
+            {
+              "char_caption": "",
+              "centers": [
+                {
+                  "x": 0.5,
+                  "y": 0.5
+                }
+              ]
+            },
+            {
+              "char_caption": "",
+              "centers": [
+                {
+                  "x": 0.5,
+                  "y": 0.5
+                }
+              ]
+            },
+            {
+              "char_caption": "",
+              "centers": [
+                {
+                  "x": 0.5,
+                  "y": 0.5
+                }
+              ]
+            },
+            {
+              "char_caption": "",
+              "centers": [
+                {
+                  "x": 0.5,
+                  "y": 0.5
+                }
+              ]
+            },
+            {
+              "char_caption": "",
+              "centers": [
+                {
+                  "x": 0.5,
+                  "y": 0.5
+                }
+              ]
+            }
+          ]
+        },
+        "use_coords": false,
+        "use_order": true,
+        "legacy_uc": false
+      },
+      "director_reference_strengths": null,
+      "director_reference_descriptions": null,
+      "director_reference_information_extracted": null,
+      "director_reference_secondary_strengths": null,
+      "upscale": null,
+      "straight_alpha": false,
+      "quality_boost": false,
+      "sampler": "k_euler_ancestral",
+      "controlnet_strength": 1.0,
+      "controlnet_model": null,
+      "dynamic_thresholding": false,
+      "dynamic_thresholding_percentile": 0.999,
+      "dynamic_thresholding_mimic_scale": 10.0,
+      "sm": false,
+      "sm_dyn": false,
+      "skip_cfg_above_sigma": null,
+      "skip_cfg_below_sigma": 0.0,
+      "lora_unet_weights": null,
+      "lora_clip_weights": null,
+      "deliberate_euler_ancestral_bug": false,
+      "prefer_brownian": true,
+      "cfg_sched_eligibility": "enable_for_post_summer_samplers",
+      "explike_fine_detail": false,
+      "minimize_sigma_inf": false,
+      "uncond_per_vibe": true,
+      "wonky_vibe_correlation": true,
+      "stream": "none",
+      "tag_hint_transparent_background": null,
+      "tag_hint_uc_preset": null,
+      "tag_hint_qt": null,
+      "version": 1,
+      "uc": "lowres",
+      "request_type": "PromptGenerateRequest",
+      "model_name": "NovelAI Diffusion V4.5",
+      "model_hash": "4BDE2A90",
+      "signed_hash": "t03Ah8NwEtCdg3yAty4sdZEL6c7Cnfs+H/90llOCBUQIpBSIJlc5QBf1KcZNdNsZZs300BfxKqpPpuGT9iaBAw=="
+    }
+  }
+}

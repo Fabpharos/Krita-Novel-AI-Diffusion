@@ -1,0 +1,670 @@
+{
+  "input": "6+girls, crowd, very aesthetic, masterpiece, no text",
+  "model": "nai-diffusion-5-full",
+  "action": "generate",
+  "parameters": {
+    "params_version": 4,
+    "width": 832,
+    "height": 1216,
+    "scale": 5.0,
+    "sampler": "k_euler_ancestral",
+    "steps": 28,
+    "seed": 123456789,
+    "n_samples": 1,
+    "ucPreset": 0,
+    "qualityToggle": true,
+    "dynamic_thresholding": false,
+    "controlnet_strength": 1.0,
+    "legacy": false,
+    "add_original_image": true,
+    "cfg_rescale": 0.0,
+    "noise_schedule": "karras",
+    "legacy_v3_extend": false,
+    "skip_cfg_above_sigma": null,
+    "negative_prompt": "lowres",
+    "deliberate_euler_ancestral_bug": false,
+    "prefer_brownian": true,
+    "use_coords": false,
+    "characterPrompts": [
+      {
+        "prompt": "girl, red hair",
+        "uc": "",
+        "center": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "enabled": true
+      },
+      {
+        "prompt": "girl, blue hair",
+        "uc": "",
+        "center": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "enabled": true
+      },
+      {
+        "prompt": "girl, green hair",
+        "uc": "",
+        "center": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "enabled": true
+      },
+      {
+        "prompt": "girl, black hair",
+        "uc": "",
+        "center": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "enabled": true
+      },
+      {
+        "prompt": "girl, white hair",
+        "uc": "",
+        "center": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "enabled": true
+      },
+      {
+        "prompt": "girl, pink hair",
+        "uc": "",
+        "center": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "enabled": true
+      },
+      {
+        "prompt": "girl, purple hair",
+        "uc": "",
+        "center": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "enabled": true
+      },
+      {
+        "prompt": "girl, orange hair",
+        "uc": "",
+        "center": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "enabled": true
+      },
+      {
+        "prompt": "girl, grey hair",
+        "uc": "",
+        "center": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "enabled": true
+      },
+      {
+        "prompt": "girl, brown hair",
+        "uc": "",
+        "center": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "enabled": true
+      },
+      {
+        "prompt": "girl, blonde hair",
+        "uc": "",
+        "center": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "enabled": true
+      },
+      {
+        "prompt": "girl, aqua hair",
+        "uc": "",
+        "center": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "enabled": true
+      },
+      {
+        "prompt": "girl, red hair",
+        "uc": "",
+        "center": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "enabled": true
+      },
+      {
+        "prompt": "girl, blue hair",
+        "uc": "",
+        "center": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "enabled": true
+      },
+      {
+        "prompt": "girl, green hair",
+        "uc": "",
+        "center": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "enabled": true
+      },
+      {
+        "prompt": "girl, black hair",
+        "uc": "",
+        "center": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "enabled": true
+      },
+      {
+        "prompt": "girl, white hair",
+        "uc": "",
+        "center": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "enabled": true
+      },
+      {
+        "prompt": "girl, pink hair",
+        "uc": "",
+        "center": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "enabled": true
+      },
+      {
+        "prompt": "girl, purple hair",
+        "uc": "",
+        "center": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "enabled": true
+      },
+      {
+        "prompt": "girl, orange hair",
+        "uc": "",
+        "center": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "enabled": true
+      },
+      {
+        "prompt": "girl, grey hair",
+        "uc": "",
+        "center": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "enabled": true
+      },
+      {
+        "prompt": "girl, brown hair",
+        "uc": "",
+        "center": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "enabled": true
+      },
+      {
+        "prompt": "girl, blonde hair",
+        "uc": "",
+        "center": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "enabled": true
+      }
+    ],
+    "v4_prompt": {
+      "caption": {
+        "base_caption": "6+girls, crowd, very aesthetic, masterpiece, no text",
+        "char_captions": [
+          {
+            "char_caption": "girl, red hair",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "girl, blue hair",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "girl, green hair",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "girl, black hair",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "girl, white hair",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "girl, pink hair",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "girl, purple hair",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "girl, orange hair",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "girl, grey hair",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "girl, brown hair",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "girl, blonde hair",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "girl, aqua hair",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "girl, red hair",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "girl, blue hair",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "girl, green hair",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "girl, black hair",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "girl, white hair",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "girl, pink hair",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "girl, purple hair",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "girl, orange hair",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "girl, grey hair",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "girl, brown hair",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "girl, blonde hair",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          }
+        ]
+      },
+      "use_coords": false,
+      "use_order": true
+    },
+    "v4_negative_prompt": {
+      "caption": {
+        "base_caption": "lowres",
+        "char_captions": [
+          {
+            "char_caption": "",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          },
+          {
+            "char_caption": "",
+            "centers": [
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          }
+        ]
+      },
+      "use_coords": false,
+      "use_order": true
+    }
+  }
+}

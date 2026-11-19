@@ -1,0 +1,48 @@
+{
+  "input": "1girl, smile, classroom, very aesthetic, masterpiece, no text",
+  "model": "nai-diffusion-5-full",
+  "action": "generate",
+  "parameters": {
+    "params_version": 4,
+    "width": 832,
+    "height": 1216,
+    "scale": 5.0,
+    "sampler": "k_euler_ancestral",
+    "steps": 28,
+    "seed": 123456789,
+    "n_samples": 1,
+    "ucPreset": 0,
+    "qualityToggle": true,
+    "dynamic_thresholding": false,
+    "controlnet_strength": 1.0,
+    "legacy": false,
+    "add_original_image": true,
+    "cfg_rescale": 0.0,
+    "noise_schedule": "karras",
+    "legacy_v3_extend": false,
+    "skip_cfg_above_sigma": null,
+    "negative_prompt": "lowres, bad hands, bad anatomy, artistic error, sepia, white haze, worst quality, very displeasing, jpeg artifacts, 0::ai-generated::",
+    "deliberate_euler_ancestral_bug": false,
+    "prefer_brownian": true,
+    "use_coords": false,
+    "characterPrompts": [],
+    "v4_prompt": {
+      "caption": {
+        "base_caption": "1girl, smile, classroom, very aesthetic, masterpiece, no text",
+        "char_captions": []
+      },
+      "use_coords": false,
+      "use_order": true
+    },
+    "v4_negative_prompt": {
+      "caption": {
+        "base_caption": "lowres, bad hands, bad anatomy, artistic error, sepia, white haze, worst quality, very displeasing, jpeg artifacts, 0::ai-generated::",
+        "char_captions": []
+      },
+      "use_coords": false,
+      "use_order": true
+    },
+    "tag_hint_qt": 1,
+    "tag_hint_uc_preset": 3
+  }
+}

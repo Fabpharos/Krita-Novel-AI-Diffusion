@@ -1,0 +1,37 @@
+{
+  "shape": {
+    "tier": 3,
+    "active": true,
+    "paymentProcessor": "<str>",
+    "expiresAt": 0,
+    "perks": {
+      "maxPriorityActions": 1000,
+      "startPriority": 10,
+      "contextTokens": 8192,
+      "unlimitedMaxPriority": true,
+      "moduleTrainingSteps": 10000
+    },
+    "paymentProcessorData": null,
+    "trainingStepsLeft": {
+      "fixedTrainingStepsLeft": 1000,
+      "purchasedTrainingSteps": 100
+    },
+    "accountType": 0,
+    "isGracePeriod": false,
+    "isPaypal": false,
+    "usage": {
+      "percent": 99,
+      "purchasedPercent": 0,
+      "isNegative": false,
+      "timeUntilNextPercent": 7888
+    },
+    "isNewCustomer": false
+  },
+  "top_level_keys": [
+    "information",
+    "keystore",
+    "priority",
+    "settings",
+    "subscription"
+  ]
+}

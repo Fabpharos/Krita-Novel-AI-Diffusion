@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Service
+ServiceTypes=Krita/PythonPlugin
+X-KDE-Library=nai_krita
+X-Python-2-Compatible=false
+Name=NovelAI Image Generation
+Comment=Generate images with NovelAI from a docker panel, with an Anlas guard and manga panel support

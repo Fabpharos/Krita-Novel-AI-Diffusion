@@ -1,0 +1,49 @@
+{
+  "input": "1girl, black hair, school uniform, classroom, angry, frown, ",
+  "model": "nai-diffusion-5-full-inpainting",
+  "action": "infill",
+  "parameters": {
+    "params_version": 4,
+    "width": 832,
+    "height": 1216,
+    "scale": 5.0,
+    "sampler": "k_euler_ancestral",
+    "steps": 28,
+    "seed": 123456789,
+    "n_samples": 1,
+    "ucPreset": 0,
+    "qualityToggle": true,
+    "dynamic_thresholding": false,
+    "controlnet_strength": 1.0,
+    "legacy": false,
+    "add_original_image": true,
+    "cfg_rescale": 0.0,
+    "noise_schedule": "karras",
+    "legacy_v3_extend": false,
+    "skip_cfg_above_sigma": null,
+    "negative_prompt": "lowres",
+    "deliberate_euler_ancestral_bug": false,
+    "prefer_brownian": true,
+    "use_coords": false,
+    "characterPrompts": [],
+    "v4_prompt": {
+      "caption": {
+        "base_caption": "1girl, black hair, school uniform, classroom, angry, frown, ",
+        "char_captions": []
+      },
+      "use_coords": false,
+      "use_order": true
+    },
+    "v4_negative_prompt": {
+      "caption": {
+        "base_caption": "lowres",
+        "char_captions": []
+      },
+      "use_coords": false,
+      "use_order": true
+    },
+    "image": "<1552704 base64 chars>",
+    "mask": "<8580 base64 chars>",
+    "extra_noise_seed": 123456789
+  }
+}
