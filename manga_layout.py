@@ -243,17 +243,22 @@ def build(spec, out, gen_mp=1.0):
         if not p["frameless"] and not p["inset_of"]:
             bd.line(closed(p["poly"]), fill=(0, 0, 0, 255), width=bw, joint="curve")
     g = cfg["gutter_row"]
-    for p in panels:  # insets: white gutter on the sides facing into the parent, then border
+    by_id = {p["id"]: p for p in panels}
+    for p in panels:  # insets: white gutter wherever the parent's art continues past them, then border
         if not p["inset_of"]:
             continue
         (ix0, iy0), _, (ix1, iy1), _ = p["poly"]
-        white = (255, 255, 255, 255)
-        ey = iy0 - g / 2 if "bottom" in p["corner"] else iy1 + g / 2
-        ex = ix1 + g / 2 if "left" in p["corner"] else ix0 - g / 2
-        hx = (ix0, ix1 + g) if "left" in p["corner"] else (ix0 - g, ix1)
-        vy = (iy0 - g, iy1) if "bottom" in p["corner"] else (iy0, iy1 + g)
-        bd.line([(hx[0], ey), (hx[1], ey)], fill=white, width=int(g))
-        bd.line([(ex, vy[0]), (ex, vy[1])], fill=white, width=int(g))
+        par = by_id[p["inset_of"]]["poly"]
+        px0, px1 = min(q[0] for q in par), max(q[0] for q in par)
+        py0, py1 = min(q[1] for q in par), max(q[1] for q in par)
+        # a side flush with the parent's edge needs no gutter; any other side (e.g. a
+        # bleeding parent whose art runs on to the page edge) gets one
+        gx0 = ix0 - g if ix0 - px0 > 1 else ix0
+        gy0 = iy0 - g if iy0 - py0 > 1 else iy0
+        gx1 = ix1 + g if px1 - ix1 > 1 else ix1
+        gy1 = iy1 + g if py1 - iy1 > 1 else iy1
+        bd.rectangle([gx0, gy0, gx1, gy1], fill=(255, 255, 255, 255))
+        bd.rectangle([ix0, iy0, ix1, iy1], fill=(0, 0, 0, 0))   # keep the inset's own area clear
         bd.line(closed(p["poly"]), fill=(0, 0, 0, 255), width=bw, joint="curve")
     # guides
     guides = Image.new("RGBA", (W, H), (0, 0, 0, 0))
