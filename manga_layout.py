@@ -64,6 +64,8 @@ def area(poly):
 def layout(node, region, cfg, out):
     if "split" not in node:
         out.append((node, dict(region)))
+        if node.get("inset"):           # small panel overlapping a corner of this one
+            out.append((node["inset"], None))
         return
     kind, kids = node["split"], node["children"]
     n = len(kids)
@@ -132,6 +134,28 @@ def centered_text(d, xy, text, f, fill, stroke=0, stroke_fill="white"):
 
 def closed(poly): return [tuple(map(float, p)) for p in poly] + [tuple(map(float, poly[0]))]
 
+POLY_SIDES = ("top", "right", "bottom", "left")   # edge i runs from poly[i] to poly[i+1]
+
+def border_runs(poly, bleed):
+    """The panel outline as polylines, leaving out bleed sides: those lie on the page
+    edge, and a line there would sit on top of the panel's art in the borders layer."""
+    pts = [tuple(map(float, p)) for p in poly]
+    keep = [s not in bleed for s in POLY_SIDES]
+    if all(keep):
+        return [pts + [pts[0]]]
+    start = keep.index(False)        # walk from just after a bleed side
+    runs, cur = [], []
+    for k in range(1, 5):
+        i = (start + k) % 4
+        if keep[i]:
+            cur = cur or [pts[i]]
+            cur.append(pts[(i + 1) % 4])
+        elif cur:
+            runs.append(cur); cur = []
+    if cur:
+        runs.append(cur)
+    return runs
+
 # ---------- panel marker (read by the NovelAI Krita plugin) ----------
 # A hidden 1x1 layer at the bottom of each panel group, named
 #   nai-panel {"v": 1, "id": 3, "chars": 1, "shot": "close", "cast": "1girl", "note": "..."}
@@ -143,7 +167,7 @@ MARKER_IMG = Image.new("RGBA", (1, 1), (0, 0, 0, 0))
 def panel_marker(p):
     d = {"v": MARKER_VERSION, "id": p["id"]}
     if isinstance(p["chars"], int): d["chars"] = p["chars"]
-    for k in ("shot", "cast", "note"):
+    for k in ("shot", "cast", "note", "inset_of"):
         if p.get(k): d[k] = p[k]
     return MARKER_PREFIX + json.dumps(d, ensure_ascii=False, separators=(", ", ": "))
 
@@ -202,9 +226,20 @@ def build(spec, out, gen_mp=1.0):
 
     panels, warnings = [], []
     for i, (node, reg) in enumerate(raw, 1):
-        for side in node.get("bleed", []):
-            reg[side] = edges[side]
-        poly = corners(reg)
+        inset_of, corner = None, ""
+        if reg is None:  # inset: rectangle in a corner of the previous panel's bounds
+            par = panels[-1]
+            inset_of, corner = par["id"], node.get("corner", "bottom-left")
+            px0, py0, px1, py1 = par["bbox"]  # keep the inset inside the inner frame
+            px0, py0, px1, py1 = max(px0, x0), max(py0, y0), min(px1, x1), min(py1, y1)
+            iw, ih = (px1 - px0) * node.get("w", 0.33), (py1 - py0) * node.get("h", 0.33)
+            ix = px0 if "left" in corner else px1 - iw
+            iy = py0 if "top" in corner else py1 - ih
+            poly = [(ix, iy), (ix + iw, iy), (ix + iw, iy + ih), (ix, iy + ih)]
+        else:
+            for side in node.get("bleed", []):
+                reg[side] = edges[side]
+            poly = corners(reg)
         if area(poly) < (20 * mm) ** 2:
             warnings.append(f"P{i} is very small or inverted - check sizes/slants")
         xs = [min(W, max(0, p[0])) for p in poly]; ys = [min(H, max(0, p[1])) for p in poly]
@@ -219,15 +254,35 @@ def build(spec, out, gen_mp=1.0):
                            bleed=node.get("bleed", []), frameless=node.get("frameless", False),
                            poly=[[round(p[0], 1), round(p[1], 1)] for p in poly],
                            bbox=[bx0, by0, bx1, by1], size=[w, h], aspect=round(w / h, 3),
-                           gen_size=list(gen_size(w, h, gen_mp)), prompt_hint=hint))
+                           gen_size=list(gen_size(w, h, gen_mp)), prompt_hint=hint,
+                           inset_of=inset_of, corner=corner))
 
     bw = max(1, round(page["border_mm"] * mm))
     # borders layer
     borders = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     bd = ImageDraw.Draw(borders)
     for p in panels:
-        if not p["frameless"]:
-            bd.line(closed(p["poly"]), fill=(0, 0, 0, 255), width=bw, joint="curve")
+        if not p["frameless"] and not p["inset_of"]:
+            for run in border_runs(p["poly"], p["bleed"]):
+                bd.line(run, fill=(0, 0, 0, 255), width=bw, joint="curve")
+    g = cfg["gutter_row"]
+    by_id = {p["id"]: p for p in panels}
+    for p in panels:  # insets: white gutter wherever the parent's art continues past them, then border
+        if not p["inset_of"]:
+            continue
+        (ix0, iy0), _, (ix1, iy1), _ = p["poly"]
+        par = by_id[p["inset_of"]]["poly"]
+        px0, px1 = min(q[0] for q in par), max(q[0] for q in par)
+        py0, py1 = min(q[1] for q in par), max(q[1] for q in par)
+        # a side flush with the parent's edge needs no gutter; any other side (e.g. a
+        # bleeding parent whose art runs on to the page edge) gets one
+        gx0 = ix0 - g if ix0 - px0 > 1 else ix0
+        gy0 = iy0 - g if iy0 - py0 > 1 else iy0
+        gx1 = ix1 + g if px1 - ix1 > 1 else ix1
+        gy1 = iy1 + g if py1 - iy1 > 1 else iy1
+        bd.rectangle([gx0, gy0, gx1, gy1], fill=(255, 255, 255, 255))
+        bd.rectangle([ix0, iy0, ix1, iy1], fill=(0, 0, 0, 0))   # keep the inset's own area clear
+        bd.line(closed(p["poly"]), fill=(0, 0, 0, 255), width=bw, joint="curve")
     # guides
     guides = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     gd = ImageDraw.Draw(guides)
@@ -280,6 +335,14 @@ def build(spec, out, gen_mp=1.0):
                                           img=base, x=bx0, y=by0),
                                      dict(type="layer", name=panel_marker(p), img=MARKER_IMG,
                                           x=bx0, y=by0, visible=False)]))
+    # each inset sits directly above the panel it overlaps (P1, P2, P3, P5 inset, P4, ...)
+    ordered = []
+    for g, p in zip(groups, panels):
+        if p["inset_of"]:
+            continue
+        ordered += [g2 for g2, p2 in zip(groups, panels) if p2["inset_of"] == p["id"]]
+        ordered.append(g)
+    groups = ordered
     tree = ([dict(type="layer", name="Labels (hide before export)", img=labels, opacity=0.85),
              dict(type="layer", name="Panel borders", img=borders)] + groups +
             [dict(type="layer", name="Guides: trim (red) / inner frame (blue)", img=guides, visible=False),

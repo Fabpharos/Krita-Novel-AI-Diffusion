@@ -182,6 +182,7 @@ class Target:
     stretch: bool = False        # scale the result exactly onto rect (Refine/Fill), not cover
     on_top: bool = False         # insert at the top of the panel group (patches over art)
     mask: bytes = b""            # feathered selection alpha over rect (w*h bytes), if any
+    breakout: str = ""           # edge ("top", …, "all"): a break-out layer above the borders
 
     @property
     def is_panel(self) -> bool:

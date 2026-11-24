@@ -1,4 +1,5 @@
 """Everything that reads or writes the Krita document. Main thread only."""
+import dataclasses
 import json
 import os
 from dataclasses import dataclass
@@ -11,7 +12,7 @@ from .qt import (QUuid, QByteArray, QImage, QPainter, QColor, FMT_ARGB32, FMT_AR
                  DEST_IN, image_from_png, image_to_png, image_from_bytes, image_bytes)
 from .resolution import cover_rect
 from .characters import bounds_center
-from . import panels
+from . import breakout, panels
 
 PREVIEW_NAME = "[NovelAI preview]"
 STATE_ANNOTATION = "nai_krita"   # per-document plugin state (panel prompts, characters)
@@ -105,6 +106,42 @@ def all_panels(doc):
                     walk(child)
     walk(doc.rootNode())
     return sorted(found, key=lambda p: p.info.id)
+
+
+def breakout_target(doc, panel: Panel, edge: str, amount: int) -> panels.Target:
+    """Target for a panel's break-out layer: the panel rect extended past `edge`.
+    The clip mask is attached separately (breakout_mask), at click time only."""
+    rect = breakout.expand(panel.target.rect, edge, amount, (doc.width(), doc.height()))
+    return panels.Target(rect=rect, group_id=panel.target.group_id,
+                         base_id=panel.target.base_id, label=panel.label, breakout=edge)
+
+
+def breakout_mask(doc, target: panels.Target) -> panels.Target:
+    """Attach the clip mask: the panel's shape (from its base layer) plus the zones
+    beyond the break-out edge."""
+    base = layer_by_id(doc, target.base_id)
+    if base is None:
+        raise DocumentError(f"Panel {target.label} has no base layer, so its shape is unknown; "
+                            "a break-out needs it.")
+    x, y, w, h = target.rect
+    doc.waitForDone()
+    alpha = breakout.alpha_channel(bytes(base.pixelData(x, y, w, h)))
+    return dataclasses.replace(target, mask=breakout.allowed_mask(alpha, w, h, target.breakout))
+
+
+def _breakout_group(doc, create=True):
+    """The root group holding break-out layers, directly above "Panel borders"."""
+    root = doc.rootNode()
+    kids = root.childNodes()
+    for child in kids:
+        if child.type() == "grouplayer" and child.name() == breakout.GROUP_NAME:
+            return child
+    if not create:
+        return None
+    group = doc.createNode(breakout.GROUP_NAME, "grouplayer")
+    i = breakout.insert_index([k.name() for k in kids])
+    root.addChildNode(group, kids[i] if i is not None else (kids[-1] if kids else None))
+    return group
 
 
 def panel_is_empty(panel: Panel) -> bool:
@@ -308,7 +345,15 @@ def _node_by_id(doc, uid):
 
 def _insert(doc, node, target: panels.Target):
     """Add node where target says: in a panel group directly above its base layer,
-    clipped to it with Inherit Alpha; otherwise above the active layer."""
+    clipped to it with Inherit Alpha; a break-out at the top of the break-out group,
+    unclipped (its mask is baked into the pixels); otherwise above the active layer."""
+    if target.breakout:
+        if layer_by_id(doc, target.group_id) is None:
+            raise DocumentError(f"Panel {target.label} is not in the active document any more.")
+        group = _breakout_group(doc)
+        kids = group.childNodes()
+        group.addChildNode(node, kids[-1] if kids else None)
+        return
     group = layer_by_id(doc, target.group_id) if target.group_id else None
     if target.group_id and group is None:
         raise DocumentError(f"Panel {target.label} is not in the active document any more.")
@@ -331,7 +376,17 @@ def _insert(doc, node, target: panels.Target):
 def _replace_previous_results(doc, target: panels.Target, keep):
     """In a panel, a newly applied result replaces earlier ones. Only layers still
     named "NovelAI <seed>" count; a renamed layer is treated as the user's own.
-    Refine/Fill patches (on_top) sit over the panel's image, so they replace nothing."""
+    Refine/Fill patches (on_top) sit over the panel's image, so they replace nothing.
+    A break-out replaces only that panel's earlier break-outs ("P3 break-out NovelAI …")."""
+    if target.breakout:
+        group = _breakout_group(doc, create=False)
+        removed = 0
+        for child in list(group.childNodes()) if group is not None else []:
+            if child.uniqueId() != keep.uniqueId() and \
+                    breakout.is_result_name(child.name(), target.label):
+                child.remove()
+                removed += 1
+        return removed
     group = layer_by_id(doc, target.group_id) if target.group_id else None
     if group is None or target.on_top:
         return 0
@@ -365,7 +420,8 @@ class ResultLayers:
         pixels = _render(png, target)
         node = self._preview(doc)
         if node is not None and self._target is not None and \
-                (self._target.group_id, self._target.on_top) != (target.group_id, target.on_top):
+                (self._target.group_id, self._target.on_top, self._target.breakout) != \
+                (target.group_id, target.on_top, target.breakout):
             node.remove()   # preview moves to a different panel or position
             node = None
         if node is None:
