@@ -10,6 +10,7 @@ Phase 7: import settings from a NovelAI PNG (file or history result).
 Phase 8: Danbooru tag suggestions in every prompt box.
 Phase 10: tag presets (saved, plus NovelAI's quality tags and UC presets).
 V5 transparent backgrounds for new images.
+Break-out layers: a panel's character above the borders, poking out past an edge.
 """
 import base64
 import dataclasses
@@ -27,7 +28,7 @@ from ..qt import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QToolB
                   QTimer, WheelGuard, MB_OK, MB_CANCEL, exec_dialog, QMenu, QFileDialog,
                   INSTANT_POPUP, FMT_ARGB32, image_from_png, QFrame, STYLED_PANEL)
 from .. import characters as chars
-from .. import cost, document, jobs, models, panels, regions, request, resolution
+from .. import breakout, cost, document, jobs, models, panels, regions, request, resolution
 from .character_list import CharacterList
 from .references import ReferenceList, VIBE, CHAR
 from .. import vibes, metadata
@@ -159,6 +160,37 @@ class NovelAIDocker(DockWidget):
         self.panel_note.setStyleSheet("font-style: italic;")
         self.panel_note.setVisible(False)
         v.addWidget(self.panel_note)
+
+        # Break-out layer: a second context per panel for a character on a transparent
+        # background that pokes out past the panel border (layer above the borders).
+        self.breakout_row = QWidget()
+        bo = QHBoxLayout(self.breakout_row)
+        bo.setContentsMargins(0, 0, 0, 0)
+        self.breakout_on = QCheckBox("Break-out")
+        self.breakout_on.setToolTip(
+            "Generate this panel's break-out layer instead of its image: a character on a "
+            "transparent background (V5) placed above the panel borders, so it can poke out "
+            "past the chosen edge (e.g. a head over the top border). Inside the panel and "
+            "beyond that edge it shows; elsewhere it is cut at the panel edge.\n"
+            "It has its own prompt and characters; untick to get back to the panel's image.")
+        self.breakout_edge = QComboBox()
+        for e in breakout.EDGES:
+            self.breakout_edge.addItem(breakout.EDGE_LABELS[e], e)
+        self.breakout_edge.setToolTip("The edge the character may cross")
+        self.breakout_amount = QSpinBox()
+        self.breakout_amount.setRange(5, 100)
+        self.breakout_amount.setSuffix("%")
+        self.breakout_amount.setValue(breakout.DEFAULT_AMOUNT)
+        self.breakout_amount.setToolTip("How far past the edge, as a share of the panel's "
+                                        "height (top/bottom) or width (left/right)")
+        bo.addWidget(self.breakout_on)
+        bo.addWidget(self.breakout_edge, 1)
+        bo.addWidget(self.breakout_amount)
+        self.breakout_on.toggled.connect(self._breakout_toggled)
+        self.breakout_edge.currentIndexChanged.connect(self._update_button)
+        self.breakout_amount.valueChanged.connect(self._update_button)
+        self.breakout_row.setVisible(False)
+        v.addWidget(self.breakout_row)
 
         prompt_row = QHBoxLayout()
         prompt_row.addWidget(QLabel("Prompt"), 1)
@@ -502,6 +534,17 @@ class NovelAIDocker(DockWidget):
         doc = doc or document.active_document()
         base = self._base_target(doc)
         kind = kind or self._kind(doc)
+        if self._breakout_active():
+            if kind != GENERATE:
+                raise ValueError("A break-out layer is always a new image: set Strength to "
+                                 "100% and clear the selection (or untick Break-out).")
+            st = self.settings.style(self.style.currentText())
+            if models.get(st.model).family != models.V5:
+                raise ValueError("Break-out layers need a V5 style: they use V5's transparent "
+                                 "backgrounds.")
+            return document.breakout_target(doc, self._ctx_panel,
+                                            self.breakout_edge.currentData(),
+                                            self.breakout_amount.value())
         if kind == GENERATE:
             return base
         if kind == REFINE:
@@ -564,7 +607,14 @@ class NovelAIDocker(DockWidget):
             self._ctx_key, self._ctx_panel = None, None
             force = True
         panel = document.active_panel(doc) if self.panels_on.isChecked() else None
-        new_key = panel.label if panel else panels.PAGE_KEY
+        if self.breakout_on.isChecked() and                 (panel is None or breakout.panel_of_key(self._ctx_key or "") != panel.label):
+            self.breakout_on.blockSignals(True)   # a break-out belongs to one panel
+            self.breakout_on.setChecked(False)
+            self.breakout_on.blockSignals(False)
+        if panel is None:
+            new_key = panels.PAGE_KEY
+        else:
+            new_key = breakout.context_key(panel.label) if self.breakout_on.isChecked()                 else panel.label
         if force or new_key != self._ctx_key:
             if self._ctx_key is not None:
                 self._store_context()
@@ -595,6 +645,9 @@ class NovelAIDocker(DockWidget):
         if self._ctx_key != panels.PAGE_KEY:
             ctx["panel_prompt"] = self.panel_prompt.toPlainText()
             ctx["panel_prompt_default"] = self._panel_default
+        if breakout.is_context_key(self._ctx_key):
+            ctx["breakout"] = {"edge": self.breakout_edge.currentData(),
+                               "amount": self.breakout_amount.value()}
         self._doc_state.setdefault("contexts", {})[self._ctx_key] = ctx
         self._doc_state["prompt"] = self.prompt.toPlainText()
         self._doc_state["negative"] = self.negative.toPlainText()
@@ -691,6 +744,15 @@ class NovelAIDocker(DockWidget):
         if panel is not None:
             self.panel_prompt_label.setText(f"{panel.label} prompt (added to the prompt above)")
         self.characters.set_characters(items, positioned)
+        if breakout.is_context_key(key):
+            b = (self._doc_state.get("contexts", {}).get(key) or {}).get("breakout") or {}
+            i = self.breakout_edge.findData(b.get("edge", breakout.DEFAULT_EDGE))
+            for w in (self.breakout_edge, self.breakout_amount):
+                w.blockSignals(True)
+            self.breakout_edge.setCurrentIndex(max(0, i))
+            self.breakout_amount.setValue(int(b.get("amount", breakout.DEFAULT_AMOUNT)))
+            for w in (self.breakout_edge, self.breakout_amount):
+                w.blockSignals(False)
         self._update_button()
 
     def _show_context(self):
@@ -698,6 +760,7 @@ class NovelAIDocker(DockWidget):
         note = p.info.note if p is not None and self.panels_on.isChecked() else ""
         self.panel_note.setText(f"Note: {note}" if note else "")
         self.panel_note.setVisible(bool(note))
+        self.breakout_row.setVisible(p is not None and self.panels_on.isChecked())
         if not self.panels_on.isChecked():
             self.panel_label.setText("")
         elif p is None:
@@ -710,6 +773,8 @@ class NovelAIDocker(DockWidget):
                 bits.append(f"{p.info.chars} char")
             r = p.target.rect
             bits.append(f"{r[2]}×{r[3]}")
+            if self._breakout_active():
+                bits.append("break-out layer")
             self.panel_label.setText(" · ".join(bits))
             tip = []
             if p.info.cast:
@@ -987,7 +1052,7 @@ class NovelAIDocker(DockWidget):
             return None
 
     def _build_params(self, area, panel_prompt=None, items=None, positioned=None, kind=None,
-                      main_prompt=None, main_negative=None, refs=None):
+                      main_prompt=None, main_negative=None, refs=None, breakout_layer=None):
         """Request parameters (without image data; Refine/Fill sources are attached
         by _attach_sources at click time)."""
         st = self.settings.style(self.style.currentText())
@@ -998,7 +1063,9 @@ class NovelAIDocker(DockWidget):
         adv = self.advanced.isChecked()
         action = {GENERATE: request.GENERATE, FILL: request.INFILL,
                   REFINE_SEL: request.INFILL}.get(kind, request.IMG2IMG)
-        transparent = self._transparent_on(st.model, kind)
+        if breakout_layer is None:
+            breakout_layer = self._breakout_active()
+        transparent = self._transparent_on(st.model, kind, breakout_layer)
         prompt = panels.join_prompts(
             self.prompt.toPlainText() if main_prompt is None else main_prompt, panel_prompt)
         if transparent:   # as NovelAI's site does, before the quality tags
@@ -1024,10 +1091,22 @@ class NovelAIDocker(DockWidget):
             [CharRef("")] * len(self.references.active(CHAR)),
             vibe_encodes=refs.encodes if refs else 0)
 
-    def _transparent_on(self, model_id, kind):
-        """The checkbox applies to new images on V5 only."""
-        return (self.transparent.isChecked() and kind == GENERATE
+    def _transparent_on(self, model_id, kind, breakout_layer=False):
+        """The checkbox applies to new images on V5 only; a break-out layer is always
+        transparent."""
+        return ((self.transparent.isChecked() or breakout_layer) and kind == GENERATE
                 and models.get(model_id).family == models.V5)
+
+    def _breakout_active(self):
+        return (self._ctx_panel is not None and self.panels_on.isChecked()
+                and self.breakout_on.isChecked())
+
+    def _breakout_toggled(self, _on):
+        try:
+            self._refresh_context(document.active_document())
+        except document.DocumentError:
+            pass
+        self._update_button()
 
     def _mode_key(self):
         return cost.BATCH if self.settings.multi_mode == "batch" else cost.QUEUE
@@ -1107,6 +1186,8 @@ class NovelAIDocker(DockWidget):
                                          self.count.value(), self._mode_key(), balance)
             if kind != GENERATE:
                 target = self._attach_sources(doc, kind, target, planned)
+            if target.breakout:
+                target = document.breakout_mask(doc, target)
             for p, _ in planned:
                 request.build_body(p)  # validate before asking about cost
         except (document.DocumentError, ValueError) as e:
@@ -1127,13 +1208,15 @@ class NovelAIDocker(DockWidget):
         if kind != GENERATE:
             summary = KIND_LABELS[kind] + (f" {round(first.strength * 100)}%" if kind in (REFINE, REFINE_SEL) else "") + " · " + summary
         if target.is_panel:
-            summary = f"{target.label} · " + summary
+            summary = f"{target.label}{' break-out' if target.breakout else ''} · " + summary
         n_chars = len(first.enabled_characters())
         if n_chars:
             summary += f" · {n_chars} char" + ("s" if n_chars > 1 else "")
         entry = HistoryEntry(summary, images)
         self._add_entry(entry)
         prefix = "NovelAI" if kind == GENERATE else f"NovelAI {'fill' if kind == FILL else 'refine'}"
+        if target.breakout:
+            prefix = breakout.layer_prefix(target.label)
         job_list = [jobs.Job(params=p, verdict=v, target=target, entry=entry,
                              label=f"{prefix} {p.seed}", vibe_sources=list(refs.sources),
                              vibe_cache_dir=self._vibe_cache_dir()) for p, v in planned]
@@ -1203,6 +1286,7 @@ class NovelAIDocker(DockWidget):
                     main, neg = mains["prompt"][0], mains["negative"][0]
                 params = self._build_params(panel.target.rect, panel_prompt, items, positioned,
                                             kind=GENERATE, main_prompt=main, main_negative=neg,
+                                            breakout_layer=False,
                                             refs=refs._replace(encodes=refs.encodes if not planned else 0))
                 if not panels.join_prompts(main, panel_prompt):
                     raise ValueError(f"{panel.label} has no prompt: write a prompt first.")

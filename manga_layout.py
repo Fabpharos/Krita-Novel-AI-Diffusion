@@ -134,6 +134,28 @@ def centered_text(d, xy, text, f, fill, stroke=0, stroke_fill="white"):
 
 def closed(poly): return [tuple(map(float, p)) for p in poly] + [tuple(map(float, poly[0]))]
 
+POLY_SIDES = ("top", "right", "bottom", "left")   # edge i runs from poly[i] to poly[i+1]
+
+def border_runs(poly, bleed):
+    """The panel outline as polylines, leaving out bleed sides: those lie on the page
+    edge, and a line there would sit on top of the panel's art in the borders layer."""
+    pts = [tuple(map(float, p)) for p in poly]
+    keep = [s not in bleed for s in POLY_SIDES]
+    if all(keep):
+        return [pts + [pts[0]]]
+    start = keep.index(False)        # walk from just after a bleed side
+    runs, cur = [], []
+    for k in range(1, 5):
+        i = (start + k) % 4
+        if keep[i]:
+            cur = cur or [pts[i]]
+            cur.append(pts[(i + 1) % 4])
+        elif cur:
+            runs.append(cur); cur = []
+    if cur:
+        runs.append(cur)
+    return runs
+
 # ---------- panel marker (read by the NovelAI Krita plugin) ----------
 # A hidden 1x1 layer at the bottom of each panel group, named
 #   nai-panel {"v": 1, "id": 3, "chars": 1, "shot": "close", "cast": "1girl", "note": "..."}
@@ -241,7 +263,8 @@ def build(spec, out, gen_mp=1.0):
     bd = ImageDraw.Draw(borders)
     for p in panels:
         if not p["frameless"] and not p["inset_of"]:
-            bd.line(closed(p["poly"]), fill=(0, 0, 0, 255), width=bw, joint="curve")
+            for run in border_runs(p["poly"], p["bleed"]):
+                bd.line(run, fill=(0, 0, 0, 255), width=bw, joint="curve")
     g = cfg["gutter_row"]
     by_id = {p["id"]: p for p in panels}
     for p in panels:  # insets: white gutter wherever the parent's art continues past them, then border
