@@ -29,6 +29,7 @@ Defaults (don't ask): B5 doujin page, 350 dpi, 3 mm bleed, right-to-left reading
 - Slants (mm) add energy: use on action/emotional beats, keep calm dialogue pages square. Typical 6–15 mm. Don't slant every cut.
 - Vary row heights; avoid a perfectly even grid unless it's a 4-koma or deliberate.
 - Don't put the most important panel where the eye leaves the page (bottom-left) unless it's a cliffhanger page turn.
+- A small panel "in a corner" of another panel = an `inset` (§3). Good for a reaction or a page-turn hook (e.g. bottom-left of a big final panel). Keep it to about 25–35% of the parent's width and height.
 
 ## 3. Spec format
 
@@ -50,7 +51,8 @@ Defaults (don't ask): B5 doujin page, 350 dpi, 3 mm bleed, right-to-left reading
 ```
 - `split: rows` stacks children top→bottom; `split: cols` places them in reading order (right→left when rtl). Nest freely.
 - `sizes`: relative proportions (n values). `slants`: one per cut (n-1), mm. Rows: positive = right end lower. Cols: positive = top end further right.
-- Panel keys: `chars` (number), `shot` (extreme/close/medium/cowboy/full/wide/establishing), `note`, `cast` (tag string, e.g. "2girls" — use 1girl/2girls style tags), `bleed` (list of top/bottom/left/right; only on sides touching the page frame), `frameless` (no border).
+- Panel keys: `chars` (number), `shot` (extreme/close/medium/cowboy/full/wide/establishing), `note`, `cast` (tag string, e.g. "2girls" — use 1girl/2girls style tags), `bleed` (list of top/bottom/left/right; only on sides touching the page frame; bleed sides get no border line, since it would sit on the art at the page edge), `frameless` (no border), `inset` (a small panel overlapping a corner of this one, see below).
+- Inset: `"inset": {"corner": "bottom-left", "w": 0.3, "h": 0.3, "chars": 1, "shot": "close", "cast": "snivy, no humans", "note": "..."}` on a panel. `corner` is top-left / top-right / bottom-left / bottom-right; `w`/`h` are fractions of the parent's size inside the inner frame (default 0.33). The inset always stays inside the inner frame, even when the parent bleeds, so its subject isn't trimmed. It is numbered right after its parent, gets a white gutter wherever the parent's art continues past it (its inside edges, plus the page-edge side when the parent bleeds), and its group sits directly above the parent's group in the .ora (e.g. P1, P2, P3, P5, P4) so it covers that corner without jumping to the top of the layer stack.
 - Always give `chars` and `shot` for every panel, and `cast` whenever the characters are known: the NovelAI plugin uses them to set up each panel (character rows, panel prompt = cast + shot tags; "no humans" when `chars` is 0 and no cast). Keep `note` short and descriptive ("BIG - she turns"); the plugin shows it in its panel bar.
 
 ## 4. Run
@@ -74,7 +76,7 @@ Krita usage (tell the user once): open the .ora; each panel is a group `P# – �
 
 Each panel group contains, at the bottom, a hidden 1×1 layer named
 `nai-panel {"v": 1, "id": 3, "chars": 1, "shot": "close", "cast": "1girl", "note": "BIG - she turns"}`
-(JSON after the prefix; `chars`, `shot`, `cast`, `note` only when known). Layer names survive Krita's .ora import and saving as .kra, so the data travels with the page. The plugin reads it together with the group name: what the name shows (P-number, char count, shot) wins when present, the marker adds cast and note, and if the user renames the group the marker alone identifies the panel. Pages without markers still work from the group name.
+(JSON after the prefix; `chars`, `shot`, `cast`, `note` only when known; inset panels also carry `inset_of`: the id of the panel they overlap). Layer names survive Krita's .ora import and saving as .kra, so the data travels with the page. The plugin reads it together with the group name: what the name shows (P-number, char count, shot) wins when present, the marker adds cast and note, and if the user renames the group the marker alone identifies the panel. Pages without markers still work from the group name.
 
 Rules: never change the prefix (`nai-panel `) or remove keys; add new keys only (the plugin ignores unknown ones) and bump `"v"` only for incompatible changes. Keep the group name format `P<id> – <chars> char, <shot> – <w>x<h>` and the base layer name `P<id> base (paste above, Inherit Alpha)`. The plugin's copy of this script and its reader live in the Krita NAI Plugin project (`manga_layout.py`, `nai_krita/panels.py`); change both together. Tell the user the marker layer can be ignored but shouldn't be deleted.
 
@@ -147,6 +149,8 @@ def area(poly):
 def layout(node, region, cfg, out):
     if "split" not in node:
         out.append((node, dict(region)))
+        if node.get("inset"):           # small panel overlapping a corner of this one
+            out.append((node["inset"], None))
         return
     kind, kids = node["split"], node["children"]
     n = len(kids)
@@ -215,6 +219,28 @@ def centered_text(d, xy, text, f, fill, stroke=0, stroke_fill="white"):
 
 def closed(poly): return [tuple(map(float, p)) for p in poly] + [tuple(map(float, poly[0]))]
 
+POLY_SIDES = ("top", "right", "bottom", "left")   # edge i runs from poly[i] to poly[i+1]
+
+def border_runs(poly, bleed):
+    """The panel outline as polylines, leaving out bleed sides: those lie on the page
+    edge, and a line there would sit on top of the panel's art in the borders layer."""
+    pts = [tuple(map(float, p)) for p in poly]
+    keep = [s not in bleed for s in POLY_SIDES]
+    if all(keep):
+        return [pts + [pts[0]]]
+    start = keep.index(False)        # walk from just after a bleed side
+    runs, cur = [], []
+    for k in range(1, 5):
+        i = (start + k) % 4
+        if keep[i]:
+            cur = cur or [pts[i]]
+            cur.append(pts[(i + 1) % 4])
+        elif cur:
+            runs.append(cur); cur = []
+    if cur:
+        runs.append(cur)
+    return runs
+
 # ---------- panel marker (read by the NovelAI Krita plugin) ----------
 # A hidden 1x1 layer at the bottom of each panel group, named
 #   nai-panel {"v": 1, "id": 3, "chars": 1, "shot": "close", "cast": "1girl", "note": "..."}
@@ -226,7 +252,7 @@ MARKER_IMG = Image.new("RGBA", (1, 1), (0, 0, 0, 0))
 def panel_marker(p):
     d = {"v": MARKER_VERSION, "id": p["id"]}
     if isinstance(p["chars"], int): d["chars"] = p["chars"]
-    for k in ("shot", "cast", "note"):
+    for k in ("shot", "cast", "note", "inset_of"):
         if p.get(k): d[k] = p[k]
     return MARKER_PREFIX + json.dumps(d, ensure_ascii=False, separators=(", ", ": "))
 
@@ -285,9 +311,20 @@ def build(spec, out, gen_mp=1.0):
 
     panels, warnings = [], []
     for i, (node, reg) in enumerate(raw, 1):
-        for side in node.get("bleed", []):
-            reg[side] = edges[side]
-        poly = corners(reg)
+        inset_of, corner = None, ""
+        if reg is None:  # inset: rectangle in a corner of the previous panel's bounds
+            par = panels[-1]
+            inset_of, corner = par["id"], node.get("corner", "bottom-left")
+            px0, py0, px1, py1 = par["bbox"]  # keep the inset inside the inner frame
+            px0, py0, px1, py1 = max(px0, x0), max(py0, y0), min(px1, x1), min(py1, y1)
+            iw, ih = (px1 - px0) * node.get("w", 0.33), (py1 - py0) * node.get("h", 0.33)
+            ix = px0 if "left" in corner else px1 - iw
+            iy = py0 if "top" in corner else py1 - ih
+            poly = [(ix, iy), (ix + iw, iy), (ix + iw, iy + ih), (ix, iy + ih)]
+        else:
+            for side in node.get("bleed", []):
+                reg[side] = edges[side]
+            poly = corners(reg)
         if area(poly) < (20 * mm) ** 2:
             warnings.append(f"P{i} is very small or inverted - check sizes/slants")
         xs = [min(W, max(0, p[0])) for p in poly]; ys = [min(H, max(0, p[1])) for p in poly]
@@ -302,15 +339,35 @@ def build(spec, out, gen_mp=1.0):
                            bleed=node.get("bleed", []), frameless=node.get("frameless", False),
                            poly=[[round(p[0], 1), round(p[1], 1)] for p in poly],
                            bbox=[bx0, by0, bx1, by1], size=[w, h], aspect=round(w / h, 3),
-                           gen_size=list(gen_size(w, h, gen_mp)), prompt_hint=hint))
+                           gen_size=list(gen_size(w, h, gen_mp)), prompt_hint=hint,
+                           inset_of=inset_of, corner=corner))
 
     bw = max(1, round(page["border_mm"] * mm))
     # borders layer
     borders = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     bd = ImageDraw.Draw(borders)
     for p in panels:
-        if not p["frameless"]:
-            bd.line(closed(p["poly"]), fill=(0, 0, 0, 255), width=bw, joint="curve")
+        if not p["frameless"] and not p["inset_of"]:
+            for run in border_runs(p["poly"], p["bleed"]):
+                bd.line(run, fill=(0, 0, 0, 255), width=bw, joint="curve")
+    g = cfg["gutter_row"]
+    by_id = {p["id"]: p for p in panels}
+    for p in panels:  # insets: white gutter wherever the parent's art continues past them, then border
+        if not p["inset_of"]:
+            continue
+        (ix0, iy0), _, (ix1, iy1), _ = p["poly"]
+        par = by_id[p["inset_of"]]["poly"]
+        px0, px1 = min(q[0] for q in par), max(q[0] for q in par)
+        py0, py1 = min(q[1] for q in par), max(q[1] for q in par)
+        # a side flush with the parent's edge needs no gutter; any other side (e.g. a
+        # bleeding parent whose art runs on to the page edge) gets one
+        gx0 = ix0 - g if ix0 - px0 > 1 else ix0
+        gy0 = iy0 - g if iy0 - py0 > 1 else iy0
+        gx1 = ix1 + g if px1 - ix1 > 1 else ix1
+        gy1 = iy1 + g if py1 - iy1 > 1 else iy1
+        bd.rectangle([gx0, gy0, gx1, gy1], fill=(255, 255, 255, 255))
+        bd.rectangle([ix0, iy0, ix1, iy1], fill=(0, 0, 0, 0))   # keep the inset's own area clear
+        bd.line(closed(p["poly"]), fill=(0, 0, 0, 255), width=bw, joint="curve")
     # guides
     guides = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     gd = ImageDraw.Draw(guides)
@@ -363,6 +420,14 @@ def build(spec, out, gen_mp=1.0):
                                           img=base, x=bx0, y=by0),
                                      dict(type="layer", name=panel_marker(p), img=MARKER_IMG,
                                           x=bx0, y=by0, visible=False)]))
+    # each inset sits directly above the panel it overlaps (P1, P2, P3, P5 inset, P4, ...)
+    ordered = []
+    for g, p in zip(groups, panels):
+        if p["inset_of"]:
+            continue
+        ordered += [g2 for g2, p2 in zip(groups, panels) if p2["inset_of"] == p["id"]]
+        ordered.append(g)
+    groups = ordered
     tree = ([dict(type="layer", name="Labels (hide before export)", img=labels, opacity=0.85),
              dict(type="layer", name="Panel borders", img=borders)] + groups +
             [dict(type="layer", name="Guides: trim (red) / inner frame (blue)", img=guides, visible=False),
